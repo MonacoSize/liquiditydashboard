@@ -6,11 +6,16 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const response = await fetch('https://api.hyperliquid.xyz/info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     const data = await response.json();
     res.status(200).json(data);
   } catch (e) {

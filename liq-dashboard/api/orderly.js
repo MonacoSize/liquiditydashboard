@@ -9,7 +9,14 @@ export default async function handler(req, res) {
   const url = `https://api-evm.orderly.network/v1/${path}${qs ? '?' + qs : ''}`;
 
   try {
-    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
     const data = await response.json();
     res.status(200).json(data);
   } catch (e) {

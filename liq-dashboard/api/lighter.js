@@ -4,7 +4,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { path = 'orderbooks', ...params } = req.query;
+  // Note: Lighter API uses camelCase â€” "orderBooks" not "orderbooks"
+  const { path = 'orderBooks', ...params } = req.query;
   const qs = new URLSearchParams(params).toString();
   const url = `https://mainnet.zklighter.elliot.ai/api/v1/${path}${qs ? '?' + qs : ''}`;
 
@@ -18,7 +19,12 @@ export default async function handler(req, res) {
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    const data = await response.json();
+
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return res.status(200).json({ error: 'Empty response from Lighter API' });
+    }
+    const data = JSON.parse(text);
     res.status(200).json(data);
   } catch (e) {
     res.status(500).json({ error: e.message });
